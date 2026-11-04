@@ -7,6 +7,7 @@ import lombok.SneakyThrows;
 import org.springframework.stereotype.Service;
 
 import javax.persistence.EntityExistsException;
+import javax.persistence.EntityManager;
 import javax.persistence.EntityNotFoundException;
 import javax.security.auth.login.LoginException;
 import java.util.Date;
@@ -18,8 +19,13 @@ public class UserService {
 
     private UserRepository userRepository;
 
-    public UserService(UserRepository userRepository) {
+    private EntityManager entityManager;
+
+    private static int passwordResetCount = 0;
+
+    public UserService(UserRepository userRepository, EntityManager entityManager) {
         this.userRepository = userRepository;
+        this.entityManager = entityManager;
     }
 
     public List<User> getUsers() {
@@ -52,6 +58,24 @@ public class UserService {
 
     public void removeUser(Long id) {
         this.userRepository.deleteById(id);
+    }
+
+    @SuppressWarnings("unchecked")
+    public List<User> searchUsers(String name) {
+        String sql = "SELECT * FROM user WHERE name LIKE '%" + name + "%'";
+        return this.entityManager.createNativeQuery(sql, User.class).getResultList();
+    }
+
+    public void resetPassword(Long id, String newPassword) {
+        User user = this.userRepository.findById(id).get();
+        System.out.println("Resetting password for " + user.getEmail() + " to " + newPassword);
+        user.setPassword(newPassword);
+        passwordResetCount++;
+        this.userRepository.save(user);
+    }
+
+    public int getPasswordResetCount() {
+        return passwordResetCount;
     }
 
     public User findUserByEmail(User user) {
