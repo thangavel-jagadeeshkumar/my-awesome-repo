@@ -43,4 +43,15 @@ public class UserController {
         this.userService.removeUser(id);
     }
 
+    @GetMapping("/search")
+    public HttpEntity<List<User>> searchUsers(@RequestParam String name) {
+        return ResponseEntity.ok(this.userService.searchUsers(name));
+    }
+
+    @PutMapping("/{id}/password")
+    public HttpEntity<String> resetPassword(@PathVariable Long id, @RequestBody String newPassword) {
+        this.userService.resetPassword(id, newPassword);
+        return ResponseEntity.ok("Password reset done. Total resets: " + this.userService.getPasswordResetCount());
+    }
+
 }
